@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能工具箱</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --gradient-1: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --gradient-2: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            --gradient-3: linear-gradient(135deg, #f43f5e 0%, #f97316 100%);
+            --gradient-4: linear-gradient(135deg, #84cc16 0%, #22c55e 100%);
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            html {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            html {
+                font-size: 12px;
+            }
+        }
+
+        body {
+            background: #f8fafc;
+            min-height: 100vh;
+            padding: 1rem;
+            font-family: 'Segoe UI', '微軟正黑體', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        /* 主選單樣式 */
+        .menu-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            padding: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .menu-item {
+            background: white;
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+        }
+
+        .menu-item:nth-child(1)::before { background: var(--gradient-1); }
+        .menu-item:nth-child(2)::before { background: var(--gradient-2); }
+        .menu-item:nth-child(3)::before { background: var(--gradient-3); }
+        .menu-item:nth-child(4)::before { background: var(--gradient-4); }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .menu-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .menu-item:nth-child(1) .menu-icon { background: var(--gradient-1); -webkit-background-clip: text; }
+        .menu-item:nth-child(2) .menu-icon { background: var(--gradient-2); -webkit-background-clip: text; }
+        .menu-item:nth-child(3) .menu-icon { background: var(--gradient-3); -webkit-background-clip: text; }
+        .menu-item:nth-child(4) .menu-icon { background: var(--gradient-4); -webkit-background-clip: text; }
+
+        h1, h2 {
+            color: #1e293b;
+            text-align: center;
+            margin: 1rem 0;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+        }
+
+        .menu-item h2 {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+        }
+
+        /* 區段樣式 */
+        .section {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #f8fafc;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .section.active {
+            display: block;
+            opacity: 1;
+            z-index: 100;
+        }
+
+        /* 按鈕樣式 */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--gradient-1);
+            color: white;
+            margin: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        /* QR Code 樣式 */
+        .qr-container {
+            text-align: center;
+            padding: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        #urlInput {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 1rem 0;
+            border: 2px solid #e2e8f0;
+            border-radius: var(--radius);
+            font-size: 1rem;
+        }
+
+        #qrcode {
+            margin: 1.5rem auto;
+            padding: 1.5rem;
+            background: white;
+            display: inline-block;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        /* 計算機樣式 */
+        .calculator {
+            background: #1e293b;
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .calc-display {
+            background: #f8fafc;
+            padding: 1.25rem;
+            text-align: right;
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            margin-bottom: 1rem;
+            border-radius: var(--radius);
+            min-height: 4.375rem;
+            word-wrap: break-word;
+            font-family: monospace;
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+        }
+
+        .calc-btn {
+            padding: 1rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            font-weight: bold;
+        }
+
+        .calc-btn.number { background: var(--gradient-2); }
+        .calc-btn.operator { background: var(--gradient-3); }
+        .calc-btn.function { background: var(--gradient-4); }
+        .calc-btn.memory { background: var(--gradient-1); }
+
+        /* 小畫家樣式 */
+        .paint-container {
+            text-align: center;
+            padding: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .paint-tools {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .canvas-container {
+            position: relative;
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        #canvas {
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            touch-action: none;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* 電子相框樣式 */
+        .slideshow-container {
+            position: relative;
+            max-width: 800px;
+            margin: 1.5rem auto;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            aspect-ratio: 16/9;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .slide.active {
+            display: block;
+        }
+
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .slide-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .slide-nav:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .prev { left: 20px; }
+        .next { right: 20px; }
+
+        /* 響應式調整 */
+        @media (max-width: 768px) {
+            .calc-buttons {
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .menu-container {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+
+            .section {
+                padding: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calc-buttons {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .menu-container {
+                grid-template-columns: 1fr;
+            }
+
+            .menu-item {
+                aspect-ratio: auto;
+                padding: 1.5rem;
+            }
+
+            .paint-tools {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 主選單 -->
+        <div id="mainMenu" class="section active">
+            <div class="menu-container">
+                <div class="menu-item" onclick="showSection('qrcode')">
+                    <i class="fas fa-qrcode menu-icon"></i>
+                    <h2>QR Code 產生器</h2>
+                </div>
+                <div class="menu-item" onclick="showSection('calculator')">
+                    <i class="fas fa-calculator menu-icon"></i>
+                    <h2>科學計算機</h2>
+                </div>
+                <div class="menu-item" onclick="showSection('paint')">
+                    <i class="fas fa-paint-brush menu-icon"></i>
+                    <h2>小畫家</h2>
+                </div>
+                <div class="menu-item" onclick="showSection('slideshow')">
+                    <i class="fas fa-images menu-icon"></i>
+                    <h2>電子相框</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- QR Code 產生器 -->
+        <div id="qrcode-section" class="section">
+            <button class="btn" onclick="showSection('mainMenu')">返回主選單</button>
+            <h1>QR Code 產生器</h1>
+            <div class="qr-container">
+                <input type="text" id="urlInput" placeholder="請輸入網址或文字" oninput="generateQRCode()">
+                <button class="btn" onclick="visitURL()">前往網頁</button>
+                <div id="qrcode"></div>
+            </div>
+        </div>
+
+        <!-- 科學計算機 -->
+        <div id="calculator-section" class="section">
+            <button class="btn" onclick="showSection('mainMenu')">返回主選單</button>
+            <h1>科學計算機</h1>
+            <div class="calculator">
+                <div class="calc-display" id="display">0</div>
+                <div class="calc-buttons">
+                    <!-- 記憶體功能 -->
+                    <button class="calc-btn memory" onclick="memoryStore()">MS</button>
+                    <button class="calc-btn memory" onclick="memoryRecall()">MR</button>
+                    <button class="calc-btn memory" onclick="memoryAdd()">M+</button>
+                    <button class="calc-btn memory" onclick="memoryClear()">MC</button>
+                    <button class="calc-btn function" onclick="clearDisplay()">C</button>
+
+                    <!-- 科學函數 -->
+                    <button class="calc-btn function" onclick="calculateFunction('sin')">sin</button>
+                    <button class="calc-btn function" onclick="calculateFunction('cos')">cos</button>
+                    <button class="calc-btn function" onclick="calculateFunction('tan')">tan</button>
+                    <button class="calc-btn function" onclick="calculateFunction('log')">log</button>
+                    <button class="calc-btn function" onclick="calculateFunction('ln')">ln</button>
+
+                    <button class="calc-btn function" onclick="calculateFunction('sqrt')">√</button>
+                    <button class="calc-btn function" onclick="calculateFunction('pow2')">x²</button>
+                    <button class="calc-btn function" onclick="calculateFunction('pow3')">x³</button>
+                    <button class="calc-btn function" onclick="calculateFunction('pi')">π</button>
+                    <button class="calc-btn function" onclick="calculateFunction('e')">e</button>
+
+                    <!-- 基本數字和運算 -->
+                    <button class="calc-btn number" onclick="appendNumber('7')">7</button>
+                    <button class="calc-btn number" onclick="appendNumber('8')">8</button>
+                    <button class="calc-btn number" onclick="appendNumber('9')">9</button>
+                    <button class="calc-btn operator" onclick="appendOperator('/')">/</button>
+                    <button class="calc-btn operator" onclick="appendOperator('(')">(</button>
+
+                    <button class="calc-btn number" onclick="appendNumber('4')">4</button>
+                    <button class="calc-btn number" onclick="appendNumber('5')">5</button>
+                    <button class="calc-btn number" onclick="appendNumber('6')">6</button>
+                    <button class="calc-btn operator" onclick="appendOperator('*')">×</button>
+                    <button class="calc-btn operator" onclick="appendOperator(')')">)</button>
+
+                    <button class="calc-btn number" onclick="appendNumber('1')">1</button>
+                    <button class="calc-btn number" onclick="appendNumber('2')">2</button>
+                    <button class="calc-btn number" onclick="appendNumber('3')">3</button>
+                    <button class="calc-btn operator" onclick="appendOperator('-')">-</button>
+                    <button class="calc-btn operator" onclick="deleteLast()">←</button>
+
+                    <button class="calc-btn number" onclick="appendNumber('0')">0</button>
+                    <button class="calc-btn number" onclick="appendNumber('.')">.</button>
+                    <button class="calc-btn operator" onclick="toggleSign()">±</button>
+                    <button class="calc-btn operator" onclick="appendOperator('+')">+</button>
+                    <button class="calc-btn operator" onclick="calculate()">=</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 小畫家 -->
+        <div id="paint-section" class="section">
+            <button class="btn" onclick="showSection('mainMenu')">返回主選單</button>
+            <h1>小畫家</h1>
+            <div class="paint-container">
+                <div class="paint-tools">
+                    <button class="btn" onclick="setTool('pen')">畫筆</button>
+                    <button class="btn" onclick="setTool('eraser')">橡皮擦</button>
+                    <input type="color" id="colorPicker" value="#000000">
+                    <input type="range" id="brushSize" min="1" max="50" value="5">
+                    <span id="brushSizeDisplay">5px</span>
+                    <button class="btn" onclick="clearCanvas()">清除畫布</button>
+                    <button class="btn" onclick="downloadCanvas()">下載</button>
+                </div>
+                <div class="canvas-container">
+                    <canvas id="canvas" width="800" height="600"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 電子相框 -->
+        <div id="slideshow-section" class="section">
+            <button class="btn" onclick="showSection('mainMenu')">返回主選單</button>
+            <h1>電子相框</h1>
+            <div style="text-align: center; margin-bottom: 20px;">
+                <input type="number" id="interval" min="1" max="60" value="3" style="width: 60px;">
+                <label for="interval">秒</label>
+                <button class="btn" onclick="toggleSlideshow()">開始/暫停</button>
+            </div>
+            <div class="slideshow-container">
+                <div class="slide active">
+                    <img src="https://images.pexels.com/photos/1766838/pexels-photo-1766838.jpeg" alt="風景1">
+                </div>
+                <div class="slide">
+                    <img src="https://images.pexels.com/photos/3293148/pexels-photo-3293148.jpeg" alt="風景2">
+                </div>
+                <div class="slide">
+                    <img src="https://images.pexels.com/photos/4101555/pexels-photo-4101555.jpeg" alt="風景3">
+                </div>
+                <div class="slide">
+                    <img src="https://images.pexels.com/photos/1770809/pexels-photo-1770809.jpeg" alt="風景4">
+                </div>
+                <div class="slide">
+                    <img src="https://images.pexels.com/photos/1738434/pexels-photo-1738434.jpeg" alt="風景5">
+                </div>
+                <button class="slide-nav prev" onclick="changeSlide(-1)">❮</button>
+                <button class="slide-nav next" onclick="changeSlide(1)">❯</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 頁面切換功能
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            const targetSection = document.getElementById(sectionId + (sectionId === 'mainMenu' ? '' : '-section'));
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+        }
+
+        // QR Code 功能
+        function generateQRCode() {
+            const qrcodeContainer = document.getElementById('qrcode');
+            qrcodeContainer.innerHTML = '';
+            new QRCode(qrcodeContainer, {
+                text: document.getElementById('urlInput').value || ' ',
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+
+        function visitURL() {
+            let url = document.getElementById('urlInput').value;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            window.open(url, '_blank');
+        }
+
+        // 科學計算機功能
+        let memory = 0;
+        const scientificFunctions = {
+            'sin': x => Math.sin(x * Math.PI / 180),
+            'cos': x => Math.cos(x * Math.PI / 180),
+            'tan': x => Math.tan(x * Math.PI / 180),
+            'log': Math.log10,
+            'ln': Math.log,
+            'sqrt': Math.sqrt,
+            'pow2': x => Math.pow(x, 2),
+            'pow3': x => Math.pow(x, 3),
+            'pi': () => Math.PI,
+            'e': () => Math.E
+        };
+
+        function calculateFunction(func) {
+            try {
+                let value = parseFloat(display.textContent);
+                if (func === 'pi' || func === 'e') {
+                    display.textContent = scientificFunctions[func]();
+                } else {
+                    display.textContent = scientificFunctions[func](value);
+                }
+            } catch (e) {
+                display.textContent = 'Error';
+            }
+        }
+
+        function appendNumber(num) {
+            if (display.textContent === '0' && num !== '.') {
+                display.textContent = num;
+            } else {
+                display.textContent += num;
+            }
+        }
+
+        function appendOperator(op) {
+            display.textContent += op;
+        }
+
+        function clearDisplay() {
+            display.textContent = '0';
+        }
+
+        function deleteLast() {
+            let current = display.textContent;
+            display.textContent = current.substring(0, current.length - 1) || '0';
+        }
+
+        function calculate() {
+            try {
+                display.textContent = eval(display.textContent);
+            } catch (e) {
+                display.textContent = 'Error';
+            }
+        }
+
+        function toggleSign() {
+            let value = parseFloat(display.textContent);
+            display.textContent = -value;
+        }
+
+        function memoryStore() {
+            memory = parseFloat(display.textContent);
+        }
+
+        function memoryRecall() {
+            display.textContent = memory;
+        }
+
+        function memoryAdd() {
+            memory += parseFloat(display.textContent);
+        }
+
+        function memoryClear() {
+            memory = 0;
+        }
+
+        // 小畫家功能
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let currentTool = 'pen';
+
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        function setTool(tool) {
+            currentTool = tool;
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function downloadCanvas() {
+            const link = document.createElement('a');
+            link.download = 'drawing.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+
+            ctx.lineWidth = document.getElementById('brushSize').value;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            if (currentTool === 'eraser') {
+                ctx.strokeStyle = 'white';
+            } else {
+                ctx.strokeStyle = document.getElementById('colorPicker').value;
+            }
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        // 電子相框功能
+        let slideIndex = 0;
+        let slideInterval;
+        let isPlaying = false;
+
+        function showSlides(n) {
+            let slides = document.getElementsByClassName("slide");
+            if (n >= slides.length) slideIndex = 0;
+            if (n < 0) slideIndex = slides.length - 1;
+            
+            for (let i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
+            }
+            slides[slideIndex].style.display = "block";
+        }
+
+        function changeSlide(n) {
+            showSlides(slideIndex += n);
+        }
+
+        function toggleSlideshow() {
+            if (isPlaying) {
+                clearInterval(slideInterval);
+                isPlaying = false;
+            } else {
+                let interval = document.getElementById("interval").value * 1000;
+                slideInterval = setInterval(() => changeSlide(1), interval);
+                isPlaying = true;
+            }
+        }
+
+        // 初始化
+        window.onload = function() {
+            generateQRCode();
+            
+            document.getElementById('brushSize').addEventListener('input', function() {
+                document.getElementById('brushSizeDisplay').textContent = this.value + 'px';
+            });
+
+            showSlides(0);
+        };
+    </script>
+</body>
+</html>
